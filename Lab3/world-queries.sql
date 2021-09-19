@@ -78,7 +78,7 @@ ORDER BY co.Population ASC
 LIMIT 10);
 -- Listar aquellos países cuyos lenguajes oficiales son el Inglés y el Francés (hint: no debería haber filas duplicadas).   
 SELECT 
-    co.Name, cl.Language
+    co.Name
 FROM
     country AS co
         INNER JOIN
@@ -94,21 +94,56 @@ WHERE
             cl.countrycode = cl2.countrycode
                 AND cl2.IsOfficial = 'T'
                 AND cl2.Language = 'French');
+-- Forma más prolija:
+SELECT DISTINCT
+    c.Name
+FROM
+    country AS c
+WHERE
+    c.Code IN (SELECT 
+            co.countrycode
+        FROM
+            countrylanguage AS co
+        WHERE
+            co.Language = 'French' AND co.IsOfficial = 'T')
+        AND c.Code IN (SELECT 
+            co.countrycode
+        FROM
+            countrylanguage AS co
+        WHERE
+            co.Language = 'English' AND co.IsOfficial = 'T');
 -- Listar aquellos países que tengan hablantes del Inglés pero no del Español en su población.
 SELECT 
-    co.Name, cl.Language
+    co.Name
 FROM
     country AS co
         INNER JOIN
     countrylanguage AS cl ON cl.CountryCode = co.Code
 WHERE
-    cl.IsOfficial = 'T'
-        AND cl.Language = 'English'
+    cl.Language = 'English'
         AND NOT EXISTS( SELECT 
             cl2.Language
         FROM
             countrylanguage AS cl2
         WHERE
             cl.countrycode = cl2.countrycode
-                AND cl2.IsOfficial = 'T'
                 AND (cl2.Language = 'Spanish'));
+
+-- Forma más prolija:
+SELECT DISTINCT
+    c.Name
+FROM
+    country AS c
+WHERE
+    c.Code NOT IN (SELECT 
+            co.CountryCode
+        FROM
+            countrylanguage AS co
+        WHERE
+            co.Language = 'Spanish')
+        AND c.Code IN (SELECT 
+            co.CountryCode
+        FROM
+            countrylanguage AS co
+        WHERE
+            co.Language = 'English');
